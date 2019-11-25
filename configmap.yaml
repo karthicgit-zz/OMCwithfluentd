@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-config
+  namespace: kube-system
+data:
+  config: |
+    <match fluent.**>
+      @type null
+    </match>
+    <source>
+       @type tail
+       @id in_tail_container_logs
+       path /var/log/containers/*.log
+       #exclude_path ["/var/log/containers/envoy.**", "/var/log/containers/coredns.**"]
+       pos_file /var/log/fluentd.log.pos
+       path_key tailed_path
+       tag istio.*
+       read_from_head false
+       refresh_interval 30
+       <parse>
+         @type json
+       </parse>
+    </source>
+    <source>
+       @type systemd
+       tag kubelet
+       path /run/log/journal
+       matches [{ "_SYSTEMD_UNIT": "kubelet.service" }]
+       read_from_head false
+
+       <storage>
+        @type local
+        path /var/log/fluentd-journald-kubelet-cursor.json
+       </storage>
+
+       <entry>
+        fields_strip_underscores true
+        fields_lowercase true
+       </entry>
+    </source>
+
+    <match kubelet>
+      @type http
+      endpoint "#{ENV['OMC_URL']}" 
+      #ssl_no_verify true  # default: false
+      http_method     post    # default: post
+      #content_type    application/octet-stream
+      headers {"X-USER-IDENTITY-DOMAIN-NAME":"#{ENV['OMC_TENANT']}", "X-User-Defined-Properties": "filename:Kuberneteslogs,uploadName:Kubernetes,entityName:Kubelet,entityType:Kubernetes Cluster,logSourceName:KubeletLogs","Content-Type":"application/octet-stream"}
+      <auth>
+        method basic
+        username "#{ENV['OMC_USER']}"
+        password "#{ENV['OMC_PASSWORD']}"
+      </auth>
+    </match>
+    <match istio.**>
+      @type http
+      endpoint "#{ENV['OMC_URL']}" 
+      #ssl_no_verify true  # default: false
+      http_method     post    # default: post
+      headers {"X-USER-IDENTITY-DOMAIN-NAME":"#{ENV['OMC_TENANT']}", "X-User-Defined-Properties": "filename:Kuberneteslogs,uploadName:Kubernetes,entityName:Pod,entityType:Kubernetes Pod,logSourceName:PodLog","Content-Type":"application/octet-stream"}
+      <auth>
+        method basic
+        username "#{ENV['OMC_USER']}"
+        password "#{ENV['OMC_PASSWORD']}"
+      </auth>
+     # <buffer>
+      #  @type memory
+       # flush_thread_count 8 
+        #flush_interval 50s
+       # chunk_limit_size 1MB
+       # queue_limit_length 32
+       # retry_max_interval 30
+       # retry_forever true
+     # </buffer>
+    </match>
+    
