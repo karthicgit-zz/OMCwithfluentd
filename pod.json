@@ -1,0 +1,10 @@
+{  
+  "entityType": "omc_kubernetes_pod",
+  "entityName": "KubernetesPod",
+  "entityDisplayName": "KubernetesPod",
+  "properties": { 
+    "orcl_gtp_target_version": {
+      "value": "1.15"
+    }
+  }
+}

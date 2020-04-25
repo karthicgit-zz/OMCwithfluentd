@@ -1,0 +1,10 @@
+{  
+  "entityType": "omc_kubernetes_cluster",
+  "entityName": "Kubelet",
+  "entityDisplayName": "Kubelet",
+  "properties": { 
+    "orcl_gtp_target_version": {
+      "value": "1.15"
+    }
+  }
+}

@@ -25,12 +25,9 @@ spec:
       tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
-     # securityContext:
-      #  runAsNonRoot: false
-       # runAsUser: 0
       containers:
       - name: fluentd
-        image: karthic/fluent1.7systemd:v1
+        image: karthic/omcokefluentd:v2
         env:
           - name: FLUENT_UID
             value: "0"
@@ -44,16 +41,31 @@ spec:
               secretKeyRef:
                 name: omcsecret
                 key:  password
-          - name: OMC_URL
+          - name: OMC_CLIENTID
             valueFrom:
               secretKeyRef:
                 name: omcsecret
-                key:  url
-		  - name: OMC_TENANT
+                key:  oauthclientid
+          - name: OMC_SECRET
             valueFrom:
               secretKeyRef:
                 name: omcsecret
-                key:  tenant
+                key:  oauthsecret
+          - name: OMC_SCOPE
+            valueFrom:
+              secretKeyRef:
+                name: omcsecret
+                key:  oauthscope
+          - name: OMC_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: omcsecret
+                key:  oauthtoken
+          - name: OMC_UPLOAD
+            valueFrom:
+              secretKeyRef:
+                name: omcsecret
+                key:  oauthupload
         resources:
           limits:
             memory: 500Mi
